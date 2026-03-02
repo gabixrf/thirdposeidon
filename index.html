@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="pt-BR" class="h-full">
+ <head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Poseidon Quest</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="/_sdk/element_sdk.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;600;700;900&amp;family=Orbitron:wght@400;500;600;700;900&amp;display=swap" rel="stylesheet">
+  <style>
+    html, body { height: 100%; margin: 0; padding: 0; }
+    
+    .game-container {
+      background: linear-gradient(180deg, #0a0f1a 0%, #0d1f3c 30%, #1a3a5c 60%, #0a2540 100%);
+      min-height: 100%;
+    }
+    
+    .poseidon-svg {
+      filter: drop-shadow(0 0 30px rgba(0, 191, 255, 0.5));
+    }
+    
+    .btn-game {
+      position: relative;
+      font-family: 'Orbitron', sans-serif;
+      background: linear-gradient(135deg, #00d4ff 0%, #0099cc 50%, #006699 100%);
+      border: 3px solid transparent;
+      border-image: linear-gradient(135deg, #00ffff, #0088ff, #00ffff) 1;
+      padding: 16px 48px;
+      font-size: 18px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 3px;
+      color: #ffffff;
+      cursor: pointer;
+      overflow: hidden;
+      transition: all 0.3s ease;
+      clip-path: polygon(15px 0, 100% 0, calc(100% - 15px) 100%, 0 100%);
+      text-shadow: 0 0 10px rgba(0, 255, 255, 0.8);
+      box-shadow: 0 0 20px rgba(0, 191, 255, 0.4), inset 0 0 20px rgba(0, 255, 255, 0.1);
+    }
+    
+    .btn-game:hover {
+      transform: scale(1.05);
+      box-shadow: 0 0 40px rgba(0, 191, 255, 0.8), inset 0 0 30px rgba(0, 255, 255, 0.2);
+      background: linear-gradient(135deg, #00e5ff 0%, #00aadd 50%, #0077aa 100%);
+    }
+    
+    .btn-game:active {
+      transform: scale(0.98);
+    }
+    
+    .btn-game::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.3), transparent);
+      transition: left 0.5s ease;
+    }
+    
+    .btn-game:hover::before {
+      left: 100%;
+    }
+    
+    .btn-disabled {
+      background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
+      border-image: linear-gradient(135deg, #444, #333, #444) 1;
+      color: #666;
+      cursor: not-allowed;
+      text-shadow: none;
+      box-shadow: none;
+    }
+    
+    .btn-disabled:hover {
+      transform: none;
+      box-shadow: none;
+      background: linear-gradient(135deg, #2a2a3a 0%, #1a1a2a 100%);
+    }
+    
+    .stage-btn {
+      position: relative;
+      width: 200px;
+      height: 200px;
+      border-radius: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-family: 'Orbitron', sans-serif;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      overflow: hidden;
+    }
+    
+    .stage-completed {
+      background: linear-gradient(135deg, #1a4a1a 0%, #0d2d0d 100%);
+      border: 3px solid #00ff00;
+      box-shadow: 0 0 20px rgba(0, 255, 0, 0.3), inset 0 0 30px rgba(0, 255, 0, 0.1);
+    }
+    
+    .stage-unlocked {
+      background: linear-gradient(135deg, #00d4ff 0%, #0066aa 100%);
+      border: 3px solid #00ffff;
+      box-shadow: 0 0 30px rgba(0, 255, 255, 0.5), inset 0 0 30px rgba(0, 255, 255, 0.2);
+      animation: pulse-glow 2s ease-in-out infinite;
+    }
+    
+    .stage-unlocked:hover {
+      transform: scale(1.08);
+      box-shadow: 0 0 50px rgba(0, 255, 255, 0.8), inset 0 0 40px rgba(0, 255, 255, 0.3);
+    }
+    
+    @keyframes pulse-glow {
+      0%, 100% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.5), inset 0 0 30px rgba(0, 255, 255, 0.2); }
+      50% { box-shadow: 0 0 50px rgba(0, 255, 255, 0.8), inset 0 0 40px rgba(0, 255, 255, 0.3); }
+    }
+    
+    .modal-overlay {
+      background: rgba(0, 10, 20, 0.95);
+      backdrop-filter: blur(10px);
+    }
+    
+    .modal-box {
+      background: linear-gradient(135deg, #0d1f3c 0%, #1a3a5c 50%, #0d1f3c 100%);
+      border: 3px solid;
+      border-image: linear-gradient(135deg, #00ffff, #0088ff, #00ffff) 1;
+      box-shadow: 0 0 50px rgba(0, 191, 255, 0.5);
+    }
+    
+    .loading-bar {
+      background: linear-gradient(90deg, #001122, #002244);
+      border: 2px solid #00ffff;
+      border-radius: 50px;
+      overflow: hidden;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.3);
+    }
+    
+    .loading-fill {
+      background: linear-gradient(90deg, #00d4ff, #00ff88, #00d4ff);
+      height: 100%;
+      border-radius: 50px;
+      transition: width 0.1s linear;
+      box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+    }
+    
+    .water-effect {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 200px;
+      background: linear-gradient(180deg, transparent 0%, rgba(0, 191, 255, 0.1) 50%, rgba(0, 191, 255, 0.2) 100%);
+      pointer-events: none;
+    }
+    
+    .particles {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    
+    .particle {
+      position: absolute;
+      width: 4px;
+      height: 4px;
+      background: #00ffff;
+      border-radius: 50%;
+      opacity: 0.6;
+      animation: float-up 8s linear infinite;
+    }
+    
+    @keyframes float-up {
+      0% { transform: translateY(100vh) scale(0); opacity: 0; }
+      10% { opacity: 0.6; }
+      90% { opacity: 0.6; }
+      100% { transform: translateY(-100px) scale(1); opacity: 0; }
+    }
+    
+    .title-glow {
+      text-shadow: 0 0 20px rgba(0, 255, 255, 0.8), 0 0 40px rgba(0, 191, 255, 0.6), 0 0 60px rgba(0, 150, 255, 0.4);
+    }
+    
+    .checkmark {
+      color: #00ff00;
+      text-shadow: 0 0 10px rgba(0, 255, 0, 0.8);
+    }
+    
+    .stage-number {
+      font-size: 48px;
+      font-weight: 900;
+      margin-bottom: 8px;
+    }
+    
+    .stage-label {
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+    
+    .btn-confirm {
+      background: linear-gradient(135deg, #00cc66 0%, #009944 100%);
+      border: 2px solid #00ff88;
+    }
+    
+    .btn-confirm:hover {
+      background: linear-gradient(135deg, #00dd77 0%, #00aa55 100%);
+      box-shadow: 0 0 30px rgba(0, 255, 136, 0.6);
+    }
+    
+    .btn-cancel {
+      background: linear-gradient(135deg, #cc3333 0%, #991111 100%);
+      border: 2px solid #ff4444;
+    }
+    
+    .btn-cancel:hover {
+      background: linear-gradient(135deg, #dd4444 0%, #aa2222 100%);
+      box-shadow: 0 0 30px rgba(255, 68, 68, 0.6);
+    }
+    
+    .fade-in {
+      animation: fadeIn 0.5s ease-out;
+    }
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: scale(0.9); }
+      to { opacity: 1; transform: scale(1); }
+    }
+    
+    .slide-up {
+      animation: slideUp 0.6s ease-out;
+    }
+    
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(50px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+  <style>body { box-sizing: border-box; }</style>
+  <script src="/_sdk/data_sdk.js" type="text/javascript"></script>
+ </head>
+ <body class="h-full overflow-auto">
+  <div id="app" class="game-container relative w-full min-h-full"><!-- Particles -->
+   <div class="particles" id="particles"></div><!-- Water Effect -->
+   <div class="water-effect"></div><!-- Home Page -->
+   <div id="home-page" class="relative z-10 flex flex-col items-center justify-center min-h-full px-4 py-8"><!-- Ocean waves background -->
+    <div class="absolute inset-0 flex items-end justify-center overflow-hidden pointer-events-none">
+     <svg width="100%" height="300" viewbox="0 0 1000 300" preserveaspectratio="none" style="position: absolute; bottom: 0;">
+      <defs>
+       <lineargradient id="oceanGrad1" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#0066aa;stop-opacity:0.3" />
+        <stop offset="100%" style="stop-color:#003366;stop-opacity:0.8" />
+       </lineargradient>
+       <lineargradient id="oceanGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" style="stop-color:#00aadd;stop-opacity:0.2" />
+        <stop offset="100%" style="stop-color:#004488;stop-opacity:0.6" />
+       </lineargradient>
+      </defs> <path d="M0,100 Q250,50 500,100 T1000,100 L1000,300 L0,300 Z" fill="url(#oceanGrad1)" class="wave-bottom" /> <path d="M0,120 Q250,70 500,120 T1000,120 L1000,300 L0,300 Z" fill="url(#oceanGrad2)" class="wave-middle" /> <path d="M0,80 Q250,40 500,80 T1000,80 L1000,150 L0,150 Z" fill="#00ffff" opacity="0.1" class="wave-top" />
+     </svg>
+    </div>
+    <style>
+      .wave-bottom {
+        animation: wave-bottom 8s linear infinite;
+      }
+      .wave-middle {
+        animation: wave-middle 10s linear infinite;
+      }
+      .wave-top {
+        animation: wave-top 6s linear infinite;
+      }
+      @keyframes wave-bottom {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(1000px); }
+      }
+      @keyframes wave-middle {
+        0% { transform: translateX(-500px); }
+        100% { transform: translateX(500px); }
+      }
+      @keyframes wave-top {
+        0% { transform: translateX(-250px); }
+        100% { transform: translateX(750px); }
+      }
+    </style><!-- Content centered above waves -->
+    <div class="relative z-10 flex flex-col items-center justify-center">
+     <!-- Trident Icon -->
+     <div class="poseidon-svg mb-3">
+      <svg width="120" height="160" viewbox="0 0 120 160" fill="none" xmlns="http://www.w3.org/2000/svg">
+       <path d="M60 10 L60 140" stroke="url(#tridentGrad)" stroke-width="6" stroke-linecap="round" /> <path d="M60 10 L60 40 M45 20 L60 10 L75 20" stroke="url(#tridentGrad)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round" /> <path d="M35 35 L45 10 L45 40" stroke="url(#tridentGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /> <path d="M85 35 L75 10 L75 40" stroke="url(#tridentGrad)" stroke-width="4" stroke-linecap="round" stroke-linejoin="round" /> <defs>
+        <lineargradient id="tridentGrad" x1="60" y1="10" x2="60" y2="140">
+         <stop offset="0%" stop-color="#ffd700" />
+         <stop offset="50%" stop-color="#ffaa00" />
+         <stop offset="100%" stop-color="#cc8800" />
+        </lineargradient>
+       </defs>
+      </svg>
+     </div><!-- Title -->
+     <h1 id="game-title" class="title-glow text-4xl md:text-6xl font-black text-cyan-300 mb-1 text-center" style="font-family: 'Cinzel', serif;">THIRD POSEIDON</h1>
+     <p class="text-cyan-400 text-lg md:text-xl mb-6 tracking-widest uppercase" style="font-family: 'Orbitron', sans-serif;">Into the Deep</p><!-- Buttons -->
+     <div class="flex flex-col gap-5">
+      <button id="play-btn" class="btn-game" onclick="showStagesPage()"> ▶ JOGAR </button> <button class="btn-game btn-disabled"> ⚙ OPÇÕES </button> <button class="btn-game btn-disabled"> 🏆 RANKING </button> <button class="btn-game btn-disabled"> ℹ CRÉDITOS </button>
+     </div>
+    </div>
+   </div><!-- Stages Page -->
+   <div id="stages-page" class="hidden relative z-10 flex flex-col items-center min-h-full px-4 py-8"><button onclick="showHomePage()" class="absolute top-6 left-6 text-cyan-400 hover:text-cyan-200 transition-colors" style="font-family: 'Orbitron', sans-serif;"> ← VOLTAR </button>
+    <h2 class="title-glow text-3xl md:text-4xl font-bold text-cyan-300 mb-4 mt-8" style="font-family: 'Cinzel', serif;">SELECIONE O ESTÁGIO</h2>
+    <p class="text-cyan-500 mb-12" style="font-family: 'Orbitron', sans-serif;">Complete os desafios de Poseidon</p>
+    <div class="flex flex-wrap justify-center gap-8"><!-- Stage 1 - Completed -->
+     <div class="stage-btn stage-completed slide-up" style="animation-delay: 0.1s;"><span class="checkmark text-4xl mb-2">✓</span> <span class="stage-number text-green-400">I</span> <span class="stage-label text-green-300">Concluído</span>
+     </div><!-- Stage 2 - Completed -->
+     <div class="stage-btn stage-completed slide-up" style="animation-delay: 0.2s;"><span class="checkmark text-4xl mb-2">✓</span> <span class="stage-number text-green-400">II</span> <span class="stage-label text-green-300">Concluído</span>
+     </div><!-- Stage 3 - Unlocked -->
+     <div class="stage-btn stage-unlocked slide-up" style="animation-delay: 0.3s;" onclick="showConfirmModal()"><span class="text-4xl mb-2">🔱</span> <span class="stage-number text-white">III</span> <span class="stage-label text-cyan-200">Desbloqueado</span>
+     </div>
+    </div>
+   </div><!-- Confirm Modal -->
+   <div id="confirm-modal" class="hidden fixed inset-0 z-50 flex items-center justify-center modal-overlay">
+    <div class="modal-box fade-in p-8 md:p-12 mx-4 max-w-md text-center">
+     <div class="text-5xl mb-6">
+      🔱
+     </div>
+     <h3 class="text-xl md:text-2xl text-cyan-300 font-bold mb-4" style="font-family: 'Cinzel', serif;">AVISO</h3>
+     <p class="text-cyan-100 text-lg mb-8" style="font-family: 'Orbitron', sans-serif;">Você tem certeza que quer entrar nesse estágio?</p>
+     <div class="flex justify-center gap-4"><button onclick="startLoading()" class="btn-game btn-confirm px-8 py-3 text-sm"> ✓ SIM </button> <button onclick="hideConfirmModal()" class="btn-game btn-cancel px-8 py-3 text-sm"> ✗ NÃO </button>
+     </div>
+    </div>
+   </div><!-- Loading Page -->
+   <div id="loading-page" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center modal-overlay">
+    <div class="text-center fade-in">
+     <div class="text-6xl mb-8 animate-bounce">
+      🔱
+     </div>
+     <h3 class="text-2xl md:text-3xl text-cyan-300 font-bold mb-2" style="font-family: 'Cinzel', serif;">ESTÁGIO III</h3>
+     <p class="text-cyan-400 mb-8" style="font-family: 'Orbitron', sans-serif;">Preparando o Desafio Final...</p>
+     <div class="loading-bar w-72 md:w-96 h-6 mb-4">
+      <div id="loading-fill" class="loading-fill" style="width: 0%;"></div>
+     </div>
+     <p id="loading-percent" class="text-3xl font-bold text-cyan-200" style="font-family: 'Orbitron', sans-serif;">0%</p>
+     <p id="loading-text" class="text-cyan-500 mt-4 text-sm" style="font-family: 'Orbitron', sans-serif;">Invocando o poder dos mares...</p>
+    </div>
+   </div><!-- Game Started Page -->
+   <div id="game-started-page" class="hidden fixed inset-0 z-50 flex flex-col items-center justify-center modal-overlay">
+    <div class="text-center fade-in">
+     <h2 class="title-glow text-5xl md:text-7xl font-black text-cyan-300 mb-8" style="font-family: 'Cinzel', serif;">JOGO INICIADO</h2><button onclick="restartGame()" class="btn-game"> 🏠 MENU PRINCIPAL </button>
+    </div>
+   </div>
+  </div>
+  <script>
+    // Config
+    const defaultConfig = {
+      game_title: 'POSEIDON',
+      play_button_text: 'JOGAR',
+      primary_color: '#0d1f3c',
+      secondary_color: '#00d4ff',
+      text_color: '#67e8f9',
+      accent_color: '#ffd700',
+      button_color: '#0099cc'
+    };
+    
+    // Create particles
+    function createParticles() {
+      const container = document.getElementById('particles');
+      for (let i = 0; i < 20; i++) {
+        const particle = document.createElement('div');
+        particle.className = 'particle';
+        particle.style.left = Math.random() * 100 + '%';
+        particle.style.animationDelay = Math.random() * 8 + 's';
+        particle.style.animationDuration = (6 + Math.random() * 4) + 's';
+        container.appendChild(particle);
+      }
+    }
+    
+    // Navigation functions
+    function showStagesPage() {
+      document.getElementById('home-page').classList.add('hidden');
+      document.getElementById('stages-page').classList.remove('hidden');
+    }
+    
+    function showHomePage() {
+      document.getElementById('stages-page').classList.add('hidden');
+      document.getElementById('home-page').classList.remove('hidden');
+    }
+    
+    function showConfirmModal() {
+      document.getElementById('confirm-modal').classList.remove('hidden');
+    }
+    
+    function hideConfirmModal() {
+      document.getElementById('confirm-modal').classList.add('hidden');
+    }
+    
+    // Loading animation
+    function startLoading() {
+      hideConfirmModal();
+      document.getElementById('stages-page').classList.add('hidden');
+      document.getElementById('loading-page').classList.remove('hidden');
+      
+      const loadingFill = document.getElementById('loading-fill');
+      const loadingPercent = document.getElementById('loading-percent');
+      const loadingText = document.getElementById('loading-text');
+      
+      const loadingMessages = [
+        'Invocando o poder dos mares...',
+        'Carregando ondas ancestrais...',
+        'Preparando o tridente sagrado...',
+        'Conectando com Poseidon...',
+        'Sincronizando marés...',
+        'Quase lá...',
+        'Finalizando preparativos...'
+      ];
+      
+      let percent = 0;
+      let stuckAt98 = false;
+      let stuckTime = 0;
+      
+      const interval = setInterval(() => {
+        if (percent < 98) {
+          // Slow progression
+          percent += Math.random() * 2 + 0.5;
+          if (percent > 98) percent = 98;
+          
+          // Update message occasionally
+          if (Math.random() < 0.1) {
+            const msgIndex = Math.min(Math.floor(percent / 15), loadingMessages.length - 1);
+            loadingText.textContent = loadingMessages[msgIndex];
+          }
+        } else if (!stuckAt98) {
+          stuckAt98 = true;
+          percent = 98;
+          loadingText.textContent = 'Quase lá... aguarde...';
+        } else {
+          stuckTime += 100;
+          // Stuck at 98% for about 15-20 seconds
+          if (stuckTime > 18000) {
+            percent = 100;
+            loadingFill.style.width = '100%';
+            loadingPercent.textContent = '100%';
+            loadingText.textContent = 'Concluído!';
+            clearInterval(interval);
+            
+            setTimeout(() => {
+              showGameStarted();
+            }, 500);
+            return;
+          }
+        }
+        
+        loadingFill.style.width = Math.floor(percent) + '%';
+        loadingPercent.textContent = Math.floor(percent) + '%';
+      }, 100);
+    }
+    
+    function showGameStarted() {
+      document.getElementById('loading-page').classList.add('hidden');
+      document.getElementById('game-started-page').classList.remove('hidden');
+    }
+    
+    function restartGame() {
+      document.getElementById('game-started-page').classList.add('hidden');
+      document.getElementById('home-page').classList.remove('hidden');
+      
+      // Reset loading
+      document.getElementById('loading-fill').style.width = '0%';
+      document.getElementById('loading-percent').textContent = '0%';
+    }
+    
+    // Element SDK integration
+    async function onConfigChange(config) {
+      const title = document.getElementById('game-title');
+      const playBtn = document.getElementById('play-btn');
+      
+      if (title && config.game_title && config.game_title !== defaultConfig.game_title) {
+        title.textContent = config.game_title;
+      }
+      if (playBtn && config.play_button_text && config.play_button_text !== defaultConfig.play_button_text) {
+        playBtn.innerHTML = '▶ ' + config.play_button_text;
+      }
+    }
+    
+    function mapToCapabilities(config) {
+      return {
+        recolorables: [
+          {
+            get: () => config.primary_color || defaultConfig.primary_color,
+            set: (value) => { config.primary_color = value; window.elementSdk.setConfig({ primary_color: value }); }
+          },
+          {
+            get: () => config.secondary_color || defaultConfig.secondary_color,
+            set: (value) => { config.secondary_color = value; window.elementSdk.setConfig({ secondary_color: value }); }
+          },
+          {
+            get: () => config.text_color || defaultConfig.text_color,
+            set: (value) => { config.text_color = value; window.elementSdk.setConfig({ text_color: value }); }
+          },
+          {
+            get: () => config.accent_color || defaultConfig.accent_color,
+            set: (value) => { config.accent_color = value; window.elementSdk.setConfig({ accent_color: value }); }
+          },
+          {
+            get: () => config.button_color || defaultConfig.button_color,
+            set: (value) => { config.button_color = value; window.elementSdk.setConfig({ button_color: value }); }
+          }
+        ],
+        borderables: [],
+        fontEditable: undefined,
+        fontSizeable: undefined
+      };
+    }
+    
+    function mapToEditPanelValues(config) {
+      return new Map([
+        ['game_title', config.game_title || defaultConfig.game_title],
+        ['play_button_text', config.play_button_text || defaultConfig.play_button_text]
+      ]);
+    }
+    
+    // Initialize
+    createParticles();
+    
+    if (window.elementSdk) {
+      window.elementSdk.init({
+        defaultConfig,
+        onConfigChange,
+        mapToCapabilities,
+        mapToEditPanelValues
+      });
+    }
+  </script>
+ <script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'9d62188432902eda',t:'MTc3MjQ3MjI3NC4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>
